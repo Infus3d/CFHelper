@@ -43,7 +43,7 @@ async function startUp(){
             if(reminder.status == false) continue;
             let newReminder = reminder;
             newReminder.intervalId = setInterval(async () => {
-                let contestListEmbed = await getContests(86400, 90000); //39600, 43200
+                let contestListEmbed = await getContests(0, 82800, '57F287'); //39600, 43200
                 if(!contestListEmbed){
                     return;
                 } else {

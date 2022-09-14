@@ -5,7 +5,7 @@ const Reminder = require('../schemas/Reminder');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('contestreminder')
-        .setDescription('Enables/Disables 24 and 2 hour reminders for CF contests')
+        .setDescription('Enables/Disables the last 24 hour reminders for CF contests')
         .addBooleanOption(option => 
             option.setName('enable')
                 .setDescription('true/false')
@@ -19,7 +19,7 @@ module.exports = {
                 // const reminder = interaction.client.contestReminders.get(interaction.channelId);
                 if(!reminder || reminder.status == false){
                     const intervalId = setInterval(async () => {
-                        let contestListEmbed = await getContests(86400, 90000); //39600, 43200
+                        let contestListEmbed = await getContests(0, 82800, '57F287'); //39600, 43200
                         if(!contestListEmbed){
                             return;
                         } else {

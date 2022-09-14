@@ -7,7 +7,7 @@ module.exports = {
         .setDescription('Get future contest list from codeforces'),
     async execute(interaction){
         try{
-            let contestListEmbed = await getContests(null, null);
+            let contestListEmbed = await getContests(null, null, '0x0099FF');
             if(!contestListEmbed){
                 interaction.reply(`Couldn't retreive any upcoming contests`);
             } else {
