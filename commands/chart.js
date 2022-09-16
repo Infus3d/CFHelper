@@ -1,5 +1,6 @@
 const {SlashCommandBuilder} = require('discord.js');
 const getRatingChart = require('../functions/getRatingChart');
+const getSolvedHistogram = require('../functions/getSolvedHistogram');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -34,6 +35,13 @@ module.exports = {
                     }
                     break;
                 case 'solved':
+                    interaction.deferReply();
+                    let solvedEmbed = await getSolvedHistogram(userHandle, '#d24dff');
+                    if(!solvedEmbed){
+                        await interaction.editReply('Somthing went wrong. Could not retrieve the problems solved');
+                    } else {
+                        await interaction.editReply(solvedEmbed);
+                    }
                     break;
             }
         } catch (err) {

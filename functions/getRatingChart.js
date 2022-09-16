@@ -7,13 +7,8 @@ const axios = require('axios');
 const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
 
-const width = 1400; //px
-const height = 800; //px
-const backgroundColour = 'white'; // Uses https://www.w3schools.com/tags/canvas_fillstyle.asp
-const chartJSNodeCanvas = new ChartJSNodeCanvas({ width, height, backgroundColour });
-
 const ratingIntervals = [
-    {upper: 5000, lower: 3000, color: 'rgb(179, 0, 0)'},
+    {upper: 4500, lower: 3000, color: 'rgb(179, 0, 0)'},
     {upper: 3000, lower: 2600, color: 'rgb(255, 0, 0)'},
     {upper: 2600, lower: 2400, color: 'rgb(255, 80, 80)'},
     {upper: 2400, lower: 2300, color: 'rgb(255, 153, 51)'},
@@ -31,20 +26,21 @@ const canvasBackgroundColor = {
         // console.log(chart);
         // console.log('hello there');
         const {ctx, chartArea: {top, bottom, left, right, width, height}, scales: {x, y}} = chart;
-        ctx.fillStyle = 'rgb(0, 204, 0)';
-        ctx.fillRect(left, y.getPixelForValue(2000), width, 100);
         // console.log('This is the the pixel ----> ' + y.getPixelForValue(2300));
         for(const interval of ratingIntervals){
             ctx.fillStyle = interval.color;
-            ctx.fillRect(left, y.getPixelForValue(interval.upper), width, y.getPixelForValue(interval.lower) - y.getPixelForValue(interval.upper));
+            ctx.fillRect(left, y.getPixelForValue(interval.upper), width, Math.min(y.getPixelForValue(interval.lower), bottom) - y.getPixelForValue(interval.upper));
         }
+        ctx.fillStyle = 'rgb(255, 255, 255)';
+        ctx.fillRect(left, bottom, width, height*2);
+        ctx.fillRect(left, 0, width, top);
     }
 }
 
 async function getfromcf(handleName){
     const res = await axios.get('https://codeforces.com/api/user.rating', { params: {handle: handleName} });
     if(!res || !res.data || !res.data.status || res.data.status !== 'OK') return null;
-    console.log('Maybe here?');
+    // console.log('Maybe here?');
     const points = [];
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     let xMin, xMax, yMin, yMax;
@@ -57,7 +53,7 @@ async function getfromcf(handleName){
     }
     // console.log(points);
     yMin = Math.ceil(yMin / 100) * 100 - 300;
-    yMax = Math.ceil(yMax / 100) * 100 + 200;
+    yMax = Math.min(4200, Math.ceil(yMax / 100) * 100 + 200);
     xMin = xMin-216000;
     xMax = xMax+216000;
 
@@ -72,8 +68,8 @@ async function getfromcf(handleName){
                 showLine: true,
                 pointBackgroundColor: 'rgb(255, 255, 255)',
                 pointBorderColor: 'rgb(193, 156, 11)',
-                pointBorderWidth: 4,
-                pointRadius: 8,
+                pointBorderWidth: 3,
+                pointRadius: 7,
                 borderColor: 'rgb(193, 156, 11)',
                 borderWidth: 3,
             }],
@@ -108,6 +104,7 @@ async function getRatingChart(handleName, color) {
 
     // var base64Data = base64Image.replace(/^data:image\/png;base64,/, "");
     try{
+        const chartJSNodeCanvas = new ChartJSNodeCanvas({ width: 1100, height: 650, backgroundColour: 'white' });
         const config = await getfromcf(handleName);
         if(!config) return null;
         const buffer = await chartJSNodeCanvas.renderToBuffer(config);
@@ -120,18 +117,18 @@ async function getRatingChart(handleName, color) {
 
         const file = new AttachmentBuilder(filePath);
         const embed = new EmbedBuilder()
-                    .setTitle('Default title')
+                    .setTitle('Rating graph')
                     .setColor(color)
                     .setTimestamp()
                     .setImage('attachment://ratingChart.png');
         
-        console.log('It gets this far at least');
+        // console.log('It gets this far at least');
         return {embeds: [embed], files: [file]};
     } catch (err) {
         console.error(err);
     }
 }
-getRatingChart('catsareliquid', '#d24dff');
+getRatingChart('jiangly', '#d24dff');
 module.exports = getRatingChart;
 
 // const configuration2 = {
