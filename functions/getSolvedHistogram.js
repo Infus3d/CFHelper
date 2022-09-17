@@ -4,8 +4,8 @@ const axios = require('axios');
 const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
 
-async function getHistogram(res){
-    if(!res) return null;
+async function getHistogram(acceptedSubmissions){
+    if(!acceptedSubmissions) return null;
     let histogramInfo = {
         labels: [],
         backgroundColor: [
@@ -75,10 +75,8 @@ async function getHistogram(res){
         histogramInfo.labels.push(i);
         histogramInfo.data.push(0);
     }
-    for(const submission of res.data.result){
-        if(submission.verdict === 'OK'){
-            histogramInfo.data[(submission.problem.rating - 800) / 100]++;
-        }
+    for(const submission of acceptedSubmissions){
+        histogramInfo.data[(submission.problem.rating - 800) / 100]++;
     }
     for(let i=3500; i>=800; i-=100){
         const idx = (i - 800) / 100;
@@ -118,8 +116,8 @@ async function getHistogram(res){
     return retConfiguration;
 }
 
-async function getDoughnut(res){
-    if(!res) return null;
+async function getDoughnut(acceptedSubmissions){
+    if(!acceptedSubmissions) return null;
     const doughnutInfo = {
         labels: [],
         data: [],
@@ -165,19 +163,19 @@ async function getDoughnut(res){
             'rgb(153, 0, 115)',
         ],
     }
-    for(const submission of res.data.result){
-        if(submission.verdict === 'OK'){
-            doughnutInfo.total++;
-            for(const tag of submission.problem.tags){
-                doughnutInfo.labels.push(tag);
-            }
+    for(const submission of acceptedSubmissions){
+        doughnutInfo.total++;
+        for(const tag of submission.problem.tags){
+            doughnutInfo.labels.push(tag);
         }
     }
     doughnutInfo.labels = Array.from(new Set(doughnutInfo.labels));
+    console.log(doughnutInfo.labels);
+    console.log(acceptedSubmissions.length);
     for(const tag of doughnutInfo.labels){
         let cnt = 0;
-        for(const submission of res.data.result){
-            if(submission.verdict === 'OK' && submission.problem.tags.indexOf(tag) != -1){
+        for(const submission of acceptedSubmissions){
+            if(submission.problem.tags.indexOf(tag) != -1){
                 cnt++;
             }
         }
@@ -231,7 +229,16 @@ async function getSolvedHistogram(handleName, color) {
         const res = await axios.get('https://codeforces.com/api/user.status', { params: {handle: handleName} });
         if(!res || !res.data || !res.data.status || res.data.status !== 'OK') return null;
 
-        const config1 = await getHistogram(res);
+        let acceptedSubmissions = [], vis = {};
+        for(const submission of res.data.result){
+            const id = submission.problem.contestId + submission.problem.index;
+            if(submission.verdict === 'OK' && !vis[id]){
+                vis[id] = true;
+                acceptedSubmissions.push(submission);
+            }
+        }
+
+        const config1 = await getHistogram(acceptedSubmissions);
         const buffer1 = await chartJSNodeCanvas.renderToBuffer(config1);
         const filePath1 = __dirname + "/../charts/solvedHistogram.png";
         fs.writeFileSync(filePath1, buffer1, 'base64', function (err) {
@@ -241,7 +248,7 @@ async function getSolvedHistogram(handleName, color) {
         });
         const file1 = new AttachmentBuilder(filePath1);
 
-        const config2 = await getDoughnut(res);
+        const config2 = await getDoughnut(acceptedSubmissions);
         const buffer2 = await chartJSNodeCanvas.renderToBuffer(config2);
         const filePath2 = __dirname + "/../charts/solvedDoughnut.png";
         fs.writeFileSync(filePath2, buffer2, 'base64', function (err) {
