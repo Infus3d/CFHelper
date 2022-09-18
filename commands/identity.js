@@ -36,8 +36,10 @@ module.exports = {
                             }
                             const timeOutId = setTimeout(async () => {
                                 await Identification.deleteOne({userId: interaction.user.id});
-                                await interaction.reply('Your 5 min timer has expired for your last identification. Please start a new one.');
-                            }, 300000);
+                                const neededChannel = await interaction.client.channels.fetch(interaction.channelId);
+                                // await neededChannel.send({embeds: [contestListEmbed]});
+                                await neededChannel.send(`The 10 min timer has expired for ` + "`" + interaction.user.tag + "`" + `s last identification. Please start a new one.`);
+                            }, 600000);
                             const embed = getProblemEmbed(problem);
                             const newIdentification = new Identification({
                                 guildId: interaction.guild.id,
@@ -116,10 +118,17 @@ function blockify(inString){
 }
 
 async function getRandomProblem(){
-    const res = await axios.get('https://codeforces.com/api/problemset.problems', { params: {tags: 'implementation;math;'} });
+    const res = await axios.get('https://codeforces.com/api/problemset.problems', { params: {tags: 'implementation;'} });
     if(!res || res.data.status !== 'OK') return null;
-    const idx = Math.floor(Math.random() * (res.data.result.problems.length));
-    return res.data.result.problems[idx];
+    const easyProblems = [];
+    for(let i=0; i<res.data.result.problems.length; i++){
+        if(res.data.result.problems[i].rating <= 900){
+            easyProblems.push(i);
+        }
+    }
+    const idx = Math.floor(Math.random() * (easyProblems.length));
+    console.log(`Number of easy problems -> ${easyProblems.length}, chosen index -> ${idx}, chosen probelm index -> ${easyProblems[idx]}`);
+    return res.data.result.problems[easyProblems[idx]];
 }
 
 function getProblemEmbed(problem){
@@ -127,7 +136,7 @@ function getProblemEmbed(problem){
     const embed = new EmbedBuilder()
                 .setTitle(`${problem.contestId}-${problem.index}: ${problem.name}`)
                 .setURL(`https://codeforces.com/contest/${problem.contestId}/problem/${problem.index}`)
-                .setDescription("Please make a submission to this problem to verify your identity. The submission doesn't have to be accepted. Type `/identity verify` after your submission. You have 5 mins from the time you first identified to verify your handle.")
+                .setDescription("Please make a submission to this problem to verify your identity. The submission doesn't have to be accepted. Type `/identity verify` after your submission. You have 10 mins from the time you first identified to verify your handle.")
                 .setTimestamp();
 
     return embed;
