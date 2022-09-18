@@ -16,44 +16,52 @@ module.exports = {
             .setDescription('Verify your submission on CF'))
         .addSubcommand(subcommand => subcommand
             .setName('cancel')
-            .setDescription('Cancel ongoing identification, if any')),
+            .setDescription('Cancel ongoing identification, if any'))
+        .addSubcommand(subcommand => subcommand
+            .setName('remove')
+            .setDescription('Dissociate with an existing CF handle')),
     async execute(interaction){
         try{
             const identification = await Identification.findOne({userId: interaction.user.id});
+            const user = await User.findOne({userId: interaction.user.id});
             // console.log(`Identification is ${identification}`);
             switch(interaction.options.getSubcommand()){
                 case 'identify':
-                    if(!identification){
-                        const problem = await getRandomProblem();
-                        if(!problem){
-                            interaction.reply('There was an error while contacting codeforces. Please try again.');
-                            return;
-                        }
-                        const timeOutId = setTimeout(async () => {
-                            await Identification.deleteOne({userId: interaction.user.id});
-                            await interaction.reply('Your 5 min timer has expired for your last identification. Please start a new one.');
-                        }, 300000);
-                        const embed = getProblemEmbed(problem);
-                        const newIdentification = new Identification({
-                            guildId: interaction.guild.id,
-                            channelId: interaction.channel.id,
-                            userId: interaction.user.id,
-                            userTag: interaction.user.tag,
-                            handle: interaction.options.getString('handle'),
-                            timeOutId: timeOutId,
-                            problem: {
-                                contestId: problem.contestId,
-                                index: problem.index,
-                                name: problem.name,
-                                rating: problem.rating,
+                    if(!user){
+                        if(!identification){
+                            const problem = await getRandomProblem();
+                            if(!problem){
+                                interaction.reply('There was an error while contacting codeforces. Please try again.');
+                                return;
                             }
-                        });
-                        await newIdentification.save();
-                        await interaction.reply({embeds: [embed]});
+                            const timeOutId = setTimeout(async () => {
+                                await Identification.deleteOne({userId: interaction.user.id});
+                                await interaction.reply('Your 5 min timer has expired for your last identification. Please start a new one.');
+                            }, 300000);
+                            const embed = getProblemEmbed(problem);
+                            const newIdentification = new Identification({
+                                guildId: interaction.guild.id,
+                                channelId: interaction.channel.id,
+                                userId: interaction.user.id,
+                                userTag: interaction.user.tag,
+                                handle: interaction.options.getString('handle'),
+                                timeOutId: timeOutId,
+                                problem: {
+                                    contestId: problem.contestId,
+                                    index: problem.index,
+                                    name: problem.name,
+                                    rating: problem.rating,
+                                }
+                            });
+                            await newIdentification.save();
+                            await interaction.reply({embeds: [embed]});
+                        } else {
+                            const embed = getProblemEmbed(identification.problem);
+                            await interaction.reply(`There is an ongoing identificatoin for ` + "`" + identification.userTag + "`" +  `with CF handle ` + "`" + identification.handle + "`",
+                                    {embeds: [embed]});
+                        }
                     } else {
-                        const embed = getProblemEmbed(identification.problem);
-                        await interaction.reply(`There is an ongoing identificatoin for ` + "`" + identification.userTag + "`" +  `with CF handle ` + "`" + identification.handle + "`",
-                                {embeds: [embed]});
+                        await interaction.reply(`There is already an existing handle associated with ` + "`" + interaction.user.tag + "`");
                     }
                     break;
                 case 'verify':
@@ -86,6 +94,14 @@ module.exports = {
                         clearTimeout(identification.timeOutId);
                         await Identification.deleteOne({userId: interaction.user.id});
                         await interaction.reply(`Successfully cancelled the identification process for ` + "`" + interaction.user.tag + "`");
+                    }
+                    break;
+                case 'remove':
+                    if(!user){
+                        await interaction.reply(`There is no handle associated with ${interaction.user.id}`);
+                    } else {
+                        await User.deleteOne({userId: interaction.user.id});
+                        await interaction.reply(`Successfully dissociated ${interaction.user.tag} with their existing CF handle`);
                     }
                     break;
             }
