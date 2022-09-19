@@ -19,11 +19,11 @@ module.exports = {
                 // const reminder = interaction.client.contestReminders.get(interaction.channelId);
                 if(!reminder || reminder.status == false){
                     const intervalId = setInterval(async () => {
-                        let contestListEmbed = await getContests(0, 82800, '57F287'); //39600, 43200
+                        let contestListEmbed = await getContests(0, 50400, '57F287'); //39600, 43200
                         if(!contestListEmbed){
                             return;
                         } else {
-                            contestListEmbed.setTitle(`Contest(s) that start(s) in under 12 hours. Don't forget to register!`);
+                            contestListEmbed.setTitle(`Contests that start in under 12 hours. Don't forget to register!`);
                             const neededChannel = await interaction.client.channels.fetch(interaction.channelId);
                             await neededChannel.send({embeds: [contestListEmbed]});
                         }

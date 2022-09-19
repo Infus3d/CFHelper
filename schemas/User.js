@@ -1,9 +1,17 @@
 const mongoose = require('mongoose');
 
 const User = new mongoose.Schema({
-    userId: String,
+    userId:{
+        type: String,
+        required: true,
+        immutable: true,
+    },
     userTag: String,
-    handle: String,
+    handle: {
+        type: String,
+        required: true,
+        immutable: true,
+    },
 });
 
 module.exports = mongoose.model("User", User);

@@ -3,12 +3,20 @@ const { EmbedBuilder } = require('discord.js');
 
 module.exports = async function (lowerBound, upperBound, color){
     const res = await axios.get('https://codeforces.com/api/contest.list');
+    let cnt = 0;
+    // while((!res || res.data.status !== 'OK') && cnt < 100){
+    //     res = await axios.get('https://codeforces.com/api/contest.list');
+    //     cnt++;
+    // }
+    if(cnt > 1){
+        console.log(`See? It worked. The cnt is ${cnt}`);
+    }
     // console.log(res.data);
     
     // let replyString = "";
     let fields = [];
     for(const contest of res.data.result){
-        if(contest.phase === 'FINISHED') break;
+        if(contest.phase !== 'BEFORE') break;
         let seconds = -contest.relativeTimeSeconds;
         if(!((!lowerBound || lowerBound <= seconds) && (!upperBound || seconds < upperBound))) continue;
 

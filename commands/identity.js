@@ -29,9 +29,10 @@ module.exports = {
                 case 'identify':
                     if(!user){
                         if(!identification){
+                            interaction.deferReply();
                             const problem = await getRandomProblem();
                             if(!problem){
-                                interaction.reply('There was an error while contacting codeforces. Please try again.');
+                                interaction.editReply('There was an error while contacting codeforces. Please try again.');
                                 return;
                             }
                             const timeOutId = setTimeout(async () => {
@@ -47,7 +48,8 @@ module.exports = {
                                 userId: interaction.user.id,
                                 userTag: interaction.user.tag,
                                 handle: interaction.options.getString('handle'),
-                                timeOutId: timeOutId,
+                                tOutId: timeOutId,
+                                startedAt: Date.now(),
                                 problem: {
                                     contestId: problem.contestId,
                                     index: problem.index,
@@ -56,11 +58,13 @@ module.exports = {
                                 }
                             });
                             await newIdentification.save();
-                            await interaction.reply({embeds: [embed]});
+                            await interaction.editReply({embeds: [embed]});
                         } else {
                             const embed = getProblemEmbed(identification.problem);
-                            await interaction.reply(`There is an ongoing identificatoin for ` + "`" + identification.userTag + "`" +  `with CF handle ` + "`" + identification.handle + "`",
-                                    {embeds: [embed]});
+                            console.log(identification.problem);
+                            console.log(embed);
+                            await interaction.reply({content: `There is an ongoing identificatoin for ` + "`" + identification.userTag + "`" +  `with CF handle ` + "`" + identification.handle + "`",
+                                    embeds: [embed]});
                         }
                     } else {
                         await interaction.reply(`There is already an existing handle associated with ` + "`" + interaction.user.tag + "`");
@@ -71,7 +75,7 @@ module.exports = {
                         await interaction.reply('You do not have an ongoing identification for ' + "`" + interaction.user.tag + "`");
                     } else {
                         const verdict = await isPresent(identification);
-                        if(verdict === null){
+                        if(verdict == null){
                             await interaction.reply('There was an error while contacting codeforces. Please try again.');
                         } else if(verdict == false){
                             await interaction.reply('Verification unsuccessful. Please make sure you have' + blockify(`${identification.problem.contestId}-${identification.problem.index}`) 
@@ -100,7 +104,7 @@ module.exports = {
                     break;
                 case 'remove':
                     if(!user){
-                        await interaction.reply(`There is no handle associated with ${interaction.user.id}`);
+                        await interaction.reply(`There is no handle associated with ${interaction.user.tag}`);
                     } else {
                         await User.deleteOne({userId: interaction.user.id});
                         await interaction.reply(`Successfully dissociated ${interaction.user.tag} with their existing CF handle`);

@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const Reminder = require('./schemas/Reminder.js');
 const getContests = require('./functions/getContests.js');
+const Identification = require('./schemas/Identification.js');
 
 dotenv.config();
 
@@ -38,24 +39,49 @@ for(const file of eventFiles){
 async function startUp(){
     try{
         const allReminders = await Reminder.find();
-        if(!allReminders) return;
-        for(const reminder of allReminders){
-            if(reminder.status == false) continue;
-            let newReminder = reminder;
-            newReminder.intervalId = setInterval(async () => {
-                let contestListEmbed = await getContests(0, 82800, '57F287'); //39600, 43200
-                if(!contestListEmbed){
-                    return;
-                } else {
-                    contestListEmbed.setTitle(`Contest(s) that start(s) in under 12 hours. Don't forget to register!`);
-                    // console.log('This should be the output ' + await client.channels.fetch(reminder.channelId) + ` ${reminder.channelId} is of type ${typeof(reminder.channelId)}`);
-                    const neededChannel = await client.channels.fetch(reminder.channelId);
-                    console.log(neededChannel);
-                    await neededChannel.send({embeds: [contestListEmbed]});
+        if(allReminders != null){
+            for(const reminder of allReminders){
+                if(reminder.status == false) continue;
+                let newReminder = reminder;
+                newReminder.intervalId = setInterval(async () => {
+                    let contestListEmbed = await getContests(0, 50400, '57F287'); //39600, 43200
+                    if(!contestListEmbed){
+                        return;
+                    } else {
+                        contestListEmbed.setTitle(`Contests that start in under 12 hours. Don't forget to register!`);
+                        // console.log('This should be the output ' + await client.channels.fetch(reminder.channelId) + ` ${reminder.channelId} is of type ${typeof(reminder.channelId)}`);
+                        const neededChannel = await client.channels.fetch(reminder.channelId);
+                        // console.log(neededChannel);
+                        await neededChannel.send({embeds: [contestListEmbed]});
+                    }
+                }, 10000);
+                await Reminder.findByIdAndUpdate(reminder.id, newReminder);
+                console.log(`Successfully initiated the reminder for ${reminder.channelId} channel`);
+            }
+        }
+        const allIdentifications = await Identification.find();
+        if(allIdentifications != null){
+            for(let ident of allIdentifications){
+                let diff = Date.now() - ident.startedAt;
+                if(diff < 600000 && diff > 1000){
+                     ident.tOutId = setTimeout(async () => {
+                        await Identification.deleteOne({userId: ident.userId});
+                        const neededChannel = await client.channels.fetch(ident.channelId);
+                        // await neededChannel.send({embeds: [contestListEmbed]});
+                        await neededChannel.send(`The 10 min timer has expired for ` + "`" + ident.userTag + "`" + `s last identification. Please start a new one.`);
+                    }, 600000 - diff);
+                    await Identification.updateOne({userId: ident.userId}, ident);
+                    // await Identification.find();
+                    console.log('Here ' + Date.now());
+                    console.log(`Successfully resumed the identification for ${ident.userTag} user`);
+                } 
+                else {
+                    await Identification.deleteOne({userId: ident.userId});
+                    const neededChannel = await client.channels.fetch(ident.channelId);
+                    await neededChannel.send(`The 10 min timer has expired for ` + "`" + ident.userTag + "`" + `s last identification when the system was down. Please initiate a new one. Sorry for inconvenience.`);
+                    console.log(`Removed expired identification for ${ident.userTag} from the database`);
                 }
-            }, 5000);
-            await Reminder.findByIdAndUpdate(reminder.id, newReminder);
-            console.log(`Successfully initiated the reminder for ${reminder.channelId} channel`);
+            }
         }
     } catch (err){
         console.error(err);
@@ -92,9 +118,12 @@ async function startUp(){
 
 
 mongoose.connect(process.env.mongodbToken,
-    () => console.log('Successfully Connected to MongoDB Atlas'),
+    () => {
+        console.log('Successfully Connected to MongoDB Atlas');
+        client.login(process.env.token).then(async () => {
+            await startUp();
+        });
+    },
     (err) => console.error(err) );
-client.login(process.env.token).then(async () => {
-    await startUp();
-});
+
 

@@ -170,8 +170,8 @@ async function getDoughnut(acceptedSubmissions){
         }
     }
     doughnutInfo.labels = Array.from(new Set(doughnutInfo.labels));
-    console.log(doughnutInfo.labels);
-    console.log(acceptedSubmissions.length);
+    // console.log(doughnutInfo.labels);
+    // console.log(acceptedSubmissions.length);
     for(const tag of doughnutInfo.labels){
         let cnt = 0;
         for(const submission of acceptedSubmissions){
