@@ -61,8 +61,8 @@ module.exports = {
                             await interaction.editReply({embeds: [embed]});
                         } else {
                             const embed = getProblemEmbed(identification.problem);
-                            console.log(identification.problem);
-                            console.log(embed);
+                            // console.log(identification.problem);
+                            // console.log(embed);
                             await interaction.reply({content: `There is an ongoing identificatoin for ` + "`" + identification.userTag + "`" +  `with CF handle ` + "`" + identification.handle + "`",
                                     embeds: [embed]});
                         }

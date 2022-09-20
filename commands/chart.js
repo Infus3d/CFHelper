@@ -6,7 +6,7 @@ const User = require('../schemas/User');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('chart')
-        .setDescription('Replies with pong')
+        .setDescription('Gets the performance charts')
         .addStringOption(option =>
             option.setName('type')
             .setDescription('The type of the chart')
