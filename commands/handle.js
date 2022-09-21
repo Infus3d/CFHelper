@@ -24,11 +24,12 @@ module.exports = {
             let user = null;
             switch(interaction.options.getSubcommand()){
                 case 'discord-to-cf':
-                    let discordUserId = interaction.options.getUser('discorduser');
+                    let discordUserId = interaction.options.getUser('discorduser').id;
                     if(!discordUserId) discordUserId = interaction.user.id;
                     user = await User.findOne({userId: discordUserId});
                     if(!user){
                         // user = await interaction.client.users.fetch(discordUserId);
+                        console.log(discordUserId);
                         await interaction.reply(`There is no CF handle associated with <@${discordUserId}>`);
                     } else {
                         await interaction.reply(`CF handle for <@${user.userId}>: ` + "`" + user.handle + "`");
