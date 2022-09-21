@@ -259,7 +259,7 @@ async function getSolvedHistogram(handleName, color) {
         const file2 = new AttachmentBuilder(filePath2);
 
         const embed1 = new EmbedBuilder()
-                    .setTitle('Problems solved by Difficulty')
+                    .setTitle(`Problems solved by Difficulty for ${handleName}`)
                     .setColor(color)
                     .setTimestamp()
                     .setImage('attachment://solvedHistogram.png');

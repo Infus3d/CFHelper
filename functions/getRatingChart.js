@@ -117,7 +117,7 @@ async function getRatingChart(handleName, color) {
 
         const file = new AttachmentBuilder(filePath);
         const embed = new EmbedBuilder()
-                    .setTitle('Rating graph')
+                    .setTitle(`Rating graph for ${handleName}`)
                     .setColor(color)
                     .setTimestamp()
                     .setImage('attachment://ratingChart.png');
