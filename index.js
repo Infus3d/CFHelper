@@ -6,6 +6,9 @@ const mongoose = require('mongoose');
 const Reminder = require('./schemas/Reminder.js');
 const getContests = require('./functions/getContests.js');
 const Identification = require('./schemas/Identification.js');
+const axios = require('axios');
+const Problem = require('./schemas/Problem.js');
+const Contest = require('./schemas/Contest.js');
 
 dotenv.config();
 
@@ -44,7 +47,7 @@ async function startUp(){
                 if(reminder.status == false) continue;
                 let newReminder = reminder;
                 newReminder.intervalId = setInterval(async () => {
-                    let contestListEmbed = await getContests(0, 50400, '57F287'); //39600, 43200
+                    let contestListEmbed = await getContests(39600, 43200, '57F287'); //39600, 43200
                     if(!contestListEmbed){
                         return;
                     } else {
@@ -54,7 +57,7 @@ async function startUp(){
                         // console.log(neededChannel);
                         await neededChannel.send({embeds: [contestListEmbed]});
                     }
-                }, 10000);
+                }, 3600000);
                 await Reminder.findByIdAndUpdate(reminder.id, newReminder);
                 console.log(`Successfully initiated the reminder for ${reminder.channelId} channel`);
             }
@@ -63,7 +66,7 @@ async function startUp(){
         if(allIdentifications != null){
             for(let ident of allIdentifications){
                 let diff = Date.now() - ident.startedAt;
-                if(diff < 600000 && diff > 1000){
+                if(diff < 600000 && diff > 10000){
                      ident.tOutId = setTimeout(async () => {
                         await Identification.deleteOne({userId: ident.userId});
                         const neededChannel = await client.channels.fetch(ident.channelId);
@@ -82,6 +85,18 @@ async function startUp(){
                     console.log(`Removed expired identification for ${ident.userTag} from the database`);
                 }
             }
+        }
+        const problemsRes = await axios.get('https://codeforces.com/api/problemset.problems');
+        if(problemsRes != null && problemsRes.data.status === 'OK'){
+            await Problem.deleteMany();
+            await Problem.insertMany(problemsRes.data.result.problems);
+            // console.log(res.data.result.problems);
+        }
+        const contestRes = await axios.get('https://codeforces.com/api/contest.list');
+        if(contestRes != null && contestRes.data.status === 'OK'){
+            await Contest.deleteMany();
+            await Contest.insertMany(contestRes.data.result);
+            // console.log(res.data.result.problems);
         }
     } catch (err){
         console.error(err);

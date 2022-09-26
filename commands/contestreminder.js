@@ -19,7 +19,7 @@ module.exports = {
                 // const reminder = interaction.client.contestReminders.get(interaction.channelId);
                 if(!reminder || reminder.status == false){
                     const intervalId = setInterval(async () => {
-                        let contestListEmbed = await getContests(0, 50400, '57F287'); //39600, 43200
+                        let contestListEmbed = await getContests(39600, 43200, '57F287'); //39600, 43200
                         if(!contestListEmbed){
                             return;
                         } else {
@@ -27,7 +27,7 @@ module.exports = {
                             const neededChannel = await interaction.client.channels.fetch(interaction.channelId);
                             await neededChannel.send({embeds: [contestListEmbed]});
                         }
-                    }, 10000); //3600000
+                    }, 3600000); //3600000
                     // interaction.client.contestReminders.set(interaction.channelId, {username: interaction.user.username, status: true, intervalId: intervalId});
                     await updateReminder(interaction, true, intervalId);
                     await interaction.reply('Successfully ' + (!reminder ? 'enabled' : 'updated') + ' the contest reminders!');
