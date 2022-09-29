@@ -5,7 +5,7 @@ const Reminder = require('../schemas/Reminder');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('contestreminder')
-        .setDescription('Enables/Disables the last 24 hour reminders for CF contests')
+        .setDescription('Enables/Disables the last 12 hour reminders for CF contests')
         .addBooleanOption(option => 
             option.setName('enable')
                 .setDescription('true/false')
