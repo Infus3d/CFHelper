@@ -6,7 +6,7 @@ const axios = require('axios');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('identity')
-        .setDescription('Helps to associate CF profile with discord account')
+        .setDescription('Helps associate CF profile with discord account')
         .addSubcommand(subcommand => subcommand
             .setName('identify')
             .setDescription('Identify yourself with your CF profile')
@@ -66,7 +66,7 @@ module.exports = {
                             await interaction.reply({content: `There is an ongoing identificatoin for ` + "`" + identification.userTag + "`" +  `with CF handle ` + "`" + identification.handle + "`",
                                     embeds: [embed]});
                         }
-                    } else {
+                    } else {console
                         await interaction.reply(`There is already an existing handle associated with ` + "`" + interaction.user.tag + "`");
                     }
                     break;
